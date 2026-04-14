@@ -3,6 +3,7 @@
 // How requests flow through the apps
 
 
+
 // Load environment variables from .env (simple parser)
 $envFile = __DIR__ . '/../.env';
 if (file_exists($envFile)) {
