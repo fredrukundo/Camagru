@@ -1,5 +1,11 @@
 <?php
 
+
+/* 
+        User data => Password hashing , validation
+*/
+
+
 class User {
     private $db;
 

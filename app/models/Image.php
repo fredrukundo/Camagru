@@ -1,5 +1,9 @@
 <?php
 
+/* 
+        Image CRUD => How Images are stored/retrieved
+*/
+
 class ImageModel {
     private $db;
 
