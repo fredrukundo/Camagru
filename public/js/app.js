@@ -8,10 +8,13 @@
         initPolling();
         initPostPolling();
     });
+    
 
     /* ========================================
-       REAL-TIME POLLING
+       Client-logic: AJAX, Webcam, REAL-TIME POLLING
     ======================================== */
+
+
     function initPolling() {
         var gallery = document.getElementById('gallery-container');
         if (!gallery) return;
