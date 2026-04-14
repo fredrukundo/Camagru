@@ -2,7 +2,8 @@
 
 ## env file
 
-```
+```bash
+
 DB_HOST=db  
 DB_NAME=camagru  
 DB_USER=camagru_user  
