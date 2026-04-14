@@ -1,5 +1,7 @@
 <?php
 
+// DB connection, by using PDO
+
 class Database {
     private static $instance = null;
     private $pdo;

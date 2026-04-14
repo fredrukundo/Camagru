@@ -1,5 +1,7 @@
 <?php
 
+// Routing Logic: i.e: How URLs map to controllers
+
 class Router {
     private $routes = [];
 

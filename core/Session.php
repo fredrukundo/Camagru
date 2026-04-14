@@ -1,5 +1,7 @@
 <?php
 
+// Auth & state, i.e: How users stay logged in
+
 class Session {
     public static function start() {
         if (session_status() === PHP_SESSION_NONE) {

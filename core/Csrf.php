@@ -1,5 +1,7 @@
 <?php
 
+// Security, i.e: How Csrf tokens prevents attacks
+
 class Csrf {
     public static function generateToken() {
         if (!Session::has('csrf_token')) {
