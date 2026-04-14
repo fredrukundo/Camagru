@@ -1,5 +1,9 @@
 <?php
 
+/*
+     Main Feature: Webcom capture + server-side merge
+*/
+
 class EditorController {
 
     public function index() {

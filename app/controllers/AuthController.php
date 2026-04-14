@@ -1,5 +1,9 @@
 <?php
 
+/*
+        User system => Registration , verification , login
+*/
+
 class AuthController {
 
     public function showLogin() {

@@ -1,5 +1,11 @@
 <?php
 
+
+/*
+        Public Gallery => Pagination , likes, comments
+*/
+
+
 class GalleryController {
 
     public function index() {
