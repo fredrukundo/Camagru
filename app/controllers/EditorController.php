@@ -52,23 +52,27 @@ class EditorController {
             }
 
             $imageData = $_POST['image_data'] ?? '';
-            $overlay   = $_POST['overlay'] ?? '';
+            $overlay = trim($_POST['overlay'] ?? '');
 
             if (empty($imageData)) {
                 echo json_encode(['error' => 'No image data received']);
                 return;
             }
 
-            if (empty($overlay)) {
-                echo json_encode(['error' => 'No overlay selected']);
-                return;
-            }
+            // if (empty($overlay)) {
+            //     echo json_encode(['error' => 'No overlay selected']);
+            //     return;
+            // }
 
             // Validate overlay exists
-            $overlayPath = __DIR__ . '/../../public/overlays/' . basename($overlay);
-            if (!file_exists($overlayPath)) {
-                echo json_encode(['error' => 'Overlay not found: ' . basename($overlay)]);
-                return;
+          if (!empty($overlay)) {
+                $overlayPath = __DIR__ . '/../../public/overlays/' . basename($overlay);
+                if (!file_exists($overlayPath)) {
+                    echo json_encode(['error' => 'Invalid overlay selected']);
+                    return;
+                }
+            } else {
+                $overlayPath = null; // No overlay
             }
 
             // Check uploads directory
@@ -102,39 +106,74 @@ class EditorController {
                 return;
             }
 
-            // Load overlay PNG
-            $overlayImage = @imagecreatefrompng($overlayPath);
-            if ($overlayImage === false) {
-                imagedestroy($webcamImage);
-                echo json_encode(['error' => 'Could not load overlay PNG']);
-                return;
-            }
+            // Merge overlay only if selected
+if (!empty($overlay)) {
 
-            // Get dimensions
-            $ww = imagesx($webcamImage);
-            $wh = imagesy($webcamImage);
-            $ow = imagesx($overlayImage);
-            $oh = imagesy($overlayImage);
+    $overlayImage = @imagecreatefrompng($overlayPath);
 
-            // Create a properly sized overlay with alpha
-            $resizedOverlay = imagecreatetruecolor($ww, $wh);
-            // Enable alpha blending
-            imagealphablending($resizedOverlay, false);
-            imagesavealpha($resizedOverlay, true);
-            // Fill with transparent
-            $transparent = imagecolorallocatealpha($resizedOverlay, 0, 0, 0, 127);
-            imagefilledrectangle($resizedOverlay, 0, 0, $ww, $wh, $transparent);
-            // Copy overlay resized
-            imagecopyresampled(
-                $resizedOverlay, $overlayImage,
-                0, 0, 0, 0,
-                $ww, $wh, $ow, $oh
-            );
+    if ($overlayImage === false) {
+        imagedestroy($webcamImage);
+        echo json_encode(['error' => 'Could not load overlay PNG']);
+        return;
+    }
 
-            // Merge onto webcam image
-            imagealphablending($webcamImage, true);
-            imagesavealpha($webcamImage, true);
-            imagecopy($webcamImage, $resizedOverlay, 0, 0, 0, 0, $ww, $wh);
+    $ww = imagesx($webcamImage);
+    $wh = imagesy($webcamImage);
+    $ow = imagesx($overlayImage);
+    $oh = imagesy($overlayImage);
+
+    $resizedOverlay = imagecreatetruecolor($ww, $wh);
+
+    imagealphablending($resizedOverlay, false);
+    imagesavealpha($resizedOverlay, true);
+
+    $transparent = imagecolorallocatealpha(
+        $resizedOverlay,
+        0,
+        0,
+        0,
+        127
+    );
+
+    imagefilledrectangle(
+        $resizedOverlay,
+        0,
+        0,
+        $ww,
+        $wh,
+        $transparent
+    );
+
+    imagecopyresampled(
+        $resizedOverlay,
+        $overlayImage,
+        0,
+        0,
+        0,
+        0,
+        $ww,
+        $wh,
+        $ow,
+        $oh
+    );
+
+    imagealphablending($webcamImage, true);
+    imagesavealpha($webcamImage, true);
+
+    imagecopy(
+        $webcamImage,
+        $resizedOverlay,
+        0,
+        0,
+        0,
+        0,
+        $ww,
+        $wh
+    );
+
+    imagedestroy($overlayImage);
+    imagedestroy($resizedOverlay);
+}
 
             // Save final image
             $filename = 'img_' . uniqid() . '_' . time() . '.png';
@@ -144,8 +183,8 @@ class EditorController {
 
             // Cleanup GD
             imagedestroy($webcamImage);
-            imagedestroy($overlayImage);
-            imagedestroy($resizedOverlay);
+            // imagedestroy($overlayImage);
+            // imagedestroy($resizedOverlay);
 
             if (!$saved) {
                 echo json_encode(['error' => 'Failed to save image file']);
@@ -189,19 +228,23 @@ class EditorController {
             exit;
         }
 
-        $overlay = $_POST['overlay'] ?? '';
+        $overlay = trim($_POST['overlay'] ?? '');
 
-        if (empty($overlay)) {
-            Session::setFlash('error', 'Please select an overlay.');
-            header('Location: /editor');
-            exit;
-        }
+        // if (empty($overlay)) {
+        //     Session::setFlash('error', 'Please select an overlay.');
+        //     header('Location: /editor');
+        //     exit;
+        // }
 
-        $overlayPath = __DIR__ . '/../../public/overlays/' . basename($overlay);
-        if (!file_exists($overlayPath)) {
-            Session::setFlash('error', 'Invalid overlay.');
-            header('Location: /editor');
-            exit;
+       if (!empty($overlay)) {
+            $overlayPath = __DIR__ . '/../../public/overlays/' . basename($overlay);
+            if (!file_exists($overlayPath)) {
+                Session::setFlash('error', 'Invalid overlay selected.');
+                header('Location: /editor');
+                exit;
+            }
+        } else {
+            $overlayPath = null; // No overlay
         }
 
         // Check file upload
@@ -267,37 +310,75 @@ class EditorController {
             exit;
         }
 
-        // Load overlay
-        $overlayImage = @imagecreatefrompng($overlayPath);
-        if (!$overlayImage) {
-            imagedestroy($uploadedImage);
-            Session::setFlash('error', 'Could not load overlay.');
-            header('Location: /editor');
-            exit;
-        }
+        // Merge overlay only if one was selected
+if (!empty($overlay)) {
 
-        $iw = imagesx($uploadedImage);
-        $ih = imagesy($uploadedImage);
-        $ow = imagesx($overlayImage);
-        $oh = imagesy($overlayImage);
+    $overlayImage = @imagecreatefrompng($overlayPath);
 
-        // Create resized overlay
-        $resizedOverlay = imagecreatetruecolor($iw, $ih);
-        imagealphablending($resizedOverlay, false);
-        imagesavealpha($resizedOverlay, true);
-        $transparent = imagecolorallocatealpha($resizedOverlay, 0, 0, 0, 127);
-        imagefilledrectangle($resizedOverlay, 0, 0, $iw, $ih, $transparent);
-        imagecopyresampled(
-            $resizedOverlay, $overlayImage,
-            0, 0, 0, 0,
-            $iw, $ih, $ow, $oh
-        );
+    if (!$overlayImage) {
+        imagedestroy($uploadedImage);
+        Session::setFlash('error', 'Could not load overlay.');
+        header('Location: /editor');
+        exit;
+    }
 
-        // Merge
-        imagealphablending($uploadedImage, true);
-        imagesavealpha($uploadedImage, true);
-        imagecopy($uploadedImage, $resizedOverlay, 0, 0, 0, 0, $iw, $ih);
+    $iw = imagesx($uploadedImage);
+    $ih = imagesy($uploadedImage);
+    $ow = imagesx($overlayImage);
+    $oh = imagesy($overlayImage);
 
+    $resizedOverlay = imagecreatetruecolor($iw, $ih);
+
+    imagealphablending($resizedOverlay, false);
+    imagesavealpha($resizedOverlay, true);
+
+    $transparent = imagecolorallocatealpha(
+        $resizedOverlay,
+        0,
+        0,
+        0,
+        127
+    );
+
+    imagefilledrectangle(
+        $resizedOverlay,
+        0,
+        0,
+        $iw,
+        $ih,
+        $transparent
+    );
+
+    imagecopyresampled(
+        $resizedOverlay,
+        $overlayImage,
+        0,
+        0,
+        0,
+        0,
+        $iw,
+        $ih,
+        $ow,
+        $oh
+    );
+
+    imagealphablending($uploadedImage, true);
+    imagesavealpha($uploadedImage, true);
+
+    imagecopy(
+        $uploadedImage,
+        $resizedOverlay,
+        0,
+        0,
+        0,
+        0,
+        $iw,
+        $ih
+    );
+
+    imagedestroy($overlayImage);
+    imagedestroy($resizedOverlay);
+}
         // Save
         $uploadsDir = __DIR__ . '/../../public/uploads/';
         if (!is_dir($uploadsDir)) {
@@ -309,8 +390,8 @@ class EditorController {
         imagepng($uploadedImage, $savePath);
 
         imagedestroy($uploadedImage);
-        imagedestroy($overlayImage);
-        imagedestroy($resizedOverlay);
+        // imagedestroy($overlayImage);
+        // imagedestroy($resizedOverlay);
 
         if (!file_exists($savePath)) {
             Session::setFlash('error', 'Failed to save image.');
