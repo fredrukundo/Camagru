@@ -329,10 +329,10 @@
 
         function updateButtons() {
             if (captureBtn) {
-                captureBtn.disabled = !(selectedOverlay && webcamReady);
+                captureBtn.disabled = !webcamReady
             }
             if (uploadBtn) {
-                uploadBtn.disabled = !(selectedOverlay && fileSelected);
+                uploadBtn.disabled = !fileSelected;
             }
             if (uploadHint) {
                 uploadHint.style.display =
@@ -392,7 +392,7 @@
 
         if (captureBtn) {
             captureBtn.addEventListener('click', function () {
-                if (!selectedOverlay || !webcamReady || !webcam) return;
+                if ( !webcamReady || !webcam) return;
                 if (!csrfInput) return;
 
                 var w = webcam.videoWidth || 640;
@@ -409,7 +409,7 @@
 
                 var formData = new FormData();
                 formData.append('image_data', imageData);
-                formData.append('overlay', selectedOverlay);
+                formData.append('overlay', selectedOverlay || '');
                 formData.append('csrf_token', csrfInput.value);
 
                 fetch('/capture', { method: 'POST', body: formData })
@@ -433,10 +433,10 @@
 
         if (uploadForm) {
             uploadForm.addEventListener('submit', function (e) {
-                if (!selectedOverlay) {
-                    e.preventDefault();
-                    alert('Select an overlay first.');
-                }
+                // if (!selectedOverlay) {
+                //     e.preventDefault();
+                //     alert('Select an overlay first.');
+                // }
                 if (!fileInput || !fileInput.files || !fileInput.files[0]) {
                     e.preventDefault();
                     alert('Choose an image file.');
