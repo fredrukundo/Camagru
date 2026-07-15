@@ -288,7 +288,7 @@
         var webcam         = document.getElementById('webcam');
         var canvas         = document.getElementById('canvas');
         var captureBtn     = document.getElementById('capture-btn');
-        var overlayPreview = document.getElementById('overlay-preview');
+        var uploadLayer = document.getElementById('upload-stickers-layer');
         var webcamError    = document.getElementById('webcam-error');
         var uploadOverlay  = document.getElementById('upload-overlay');
         var uploadBtn      = document.getElementById('upload-btn');
@@ -296,11 +296,15 @@
         var fileInput      = document.getElementById('user-image-input');
         var uploadPreviewC = document.getElementById('upload-preview-container');
         var uploadPreviewI = document.getElementById('upload-preview-img');
-        var uploadOverlayP = document.getElementById('upload-overlay-preview');
+        var webcamLayer = document.getElementById('webcam-stickers-layer');
         var uploadForm     = document.getElementById('upload-form');
         var csrfInput      = document.getElementById('csrf-token');
 
-        var selectedOverlay = null;
+        
+        var stickers = [];
+        var draggingSticker = null;
+        var dragOffsetX = 0;
+        var dragOffsetY = 0;
         var webcamReady     = false;
         var fileSelected    = false;
 
@@ -320,6 +324,74 @@
             showWebcamError();
         }
 
+        function addSticker(file) {
+
+            stickers.push({
+                id: Date.now() + Math.random(),
+                file: file,
+                x: 20 + (stickers.length * 25),
+                y: 20 + (stickers.length * 25),
+                width: 120,
+                height: 120
+            });
+
+            renderStickers();
+        }
+
+        function renderStickers() {
+
+                if (uploadLayer)
+                    uploadLayer.innerHTML = "";
+
+                if (webcamLayer)
+                    webcamLayer.innerHTML = "";
+
+                stickers.forEach(function (sticker) {
+
+                    if (uploadLayer)
+                        createSticker(uploadLayer, sticker);
+
+                    if (webcamLayer)
+                        createSticker(webcamLayer, sticker);
+
+                });
+
+        }
+
+        function createSticker(layer, sticker) {
+
+            var wrapper = document.createElement("div");
+
+            wrapper.className = "sticker-wrapper";
+            wrapper.style.position = "absolute";
+            wrapper.style.left = sticker.x + "px";
+            wrapper.style.top = sticker.y + "px";
+            wrapper.dataset.id = sticker.id;
+
+            var img = document.createElement("img");
+
+            img.src = "/overlays/" + sticker.file;
+            img.className = "sticker";
+            img.style.width = sticker.width + "px";
+            img.style.height = sticker.height + "px";
+            img.draggable = false;
+
+            wrapper.appendChild(img);
+
+            wrapper.addEventListener("mousedown", function (e) {
+
+                e.preventDefault();
+
+                draggingSticker = sticker;
+
+                dragOffsetX = e.clientX - sticker.x;
+                dragOffsetY = e.clientY - sticker.y;
+
+            });
+
+            layer.appendChild(wrapper);
+        }
+
         function showWebcamError() {
             if (webcam) webcam.style.display = 'none';
             if (webcamError) webcamError.style.display = 'block';
@@ -336,33 +408,21 @@
             }
             if (uploadHint) {
                 uploadHint.style.display =
-                    (selectedOverlay && fileSelected) ? 'none' : 'block';
+                    fileSelected ? 'none' : 'block';
             }
         }
 
-        var thumbs = overlaysList.querySelectorAll('.overlay-thumb');
+        var thumbs = overlaysList.querySelectorAll(".overlay-thumb");
         thumbs.forEach(function (thumb) {
-            thumb.addEventListener('click', function () {
-                thumbs.forEach(function (el) {
-                    el.classList.remove('selected');
-                });
-                this.classList.add('selected');
-                selectedOverlay = this.getAttribute('data-overlay');
 
-                if (overlayPreview) {
-                    overlayPreview.src = '/overlays/' + selectedOverlay;
-                    overlayPreview.style.display = 'block';
-                }
-                if (uploadOverlayP && fileSelected) {
-                    uploadOverlayP.src = '/overlays/' + selectedOverlay;
-                    uploadOverlayP.style.display = 'block';
-                }
-                if (uploadOverlay) {
-                    uploadOverlay.value = selectedOverlay;
-                }
-                updateButtons();
+            thumb.addEventListener("click", function () {
+
+                addSticker(this.dataset.overlay);
+
             });
+
         });
+
 
         if (fileInput) {
             fileInput.addEventListener('change', function () {
@@ -374,11 +434,7 @@
                             uploadPreviewI.src = e.target.result;
                         if (uploadPreviewC)
                             uploadPreviewC.style.display = 'block';
-                        if (selectedOverlay && uploadOverlayP) {
-                            uploadOverlayP.src =
-                                '/overlays/' + selectedOverlay;
-                            uploadOverlayP.style.display = 'block';
-                        }
+                       
                     };
                     reader.readAsDataURL(this.files[0]);
                 } else {
@@ -409,7 +465,7 @@
 
                 var formData = new FormData();
                 formData.append('image_data', imageData);
-                formData.append('overlay', selectedOverlay || '');
+                formData.append('overlay','');
                 formData.append('csrf_token', csrfInput.value);
 
                 fetch('/capture', { method: 'POST', body: formData })
@@ -433,16 +489,30 @@
 
         if (uploadForm) {
             uploadForm.addEventListener('submit', function (e) {
-                // if (!selectedOverlay) {
-                //     e.preventDefault();
-                //     alert('Select an overlay first.');
-                // }
                 if (!fileInput || !fileInput.files || !fileInput.files[0]) {
                     e.preventDefault();
                     alert('Choose an image file.');
                 }
             });
         }
+
+        document.addEventListener("mousemove", function (e) {
+
+            if (!draggingSticker)
+                return;
+
+            draggingSticker.x = e.clientX - dragOffsetX;
+            draggingSticker.y = e.clientY - dragOffsetY;
+
+            renderStickers();
+
+        });
+
+        document.addEventListener("mouseup", function () {
+
+            draggingSticker = null;
+
+        });
     }
 
     function initPostPolling() {
