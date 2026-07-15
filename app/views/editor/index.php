@@ -8,6 +8,7 @@
             <canvas id="canvas" style="display:none;"></canvas>
             <img id="overlay-preview" class="overlay-preview"
                  src="" alt="" style="display:none;">
+            <div id="webcam-stickers-layer"></div>
             <p id="webcam-error" style="display:none; color:#fff;
                text-align:center; padding:40px;">
                 Webcam not available. Use the upload option below.
@@ -15,13 +16,20 @@
         </div>
 
         <!-- Upload preview (shown when user picks a file) -->
-        <div class="webcam-container" id="upload-preview-container"
-             style="display:none;">
-            <img id="upload-preview-img" src="" alt="Preview"
-                 style="width:100%; display:block;">
-            <img id="upload-overlay-preview" class="overlay-preview"
+        <div class="webcam-container"
+     id="upload-preview-container"
+     style="display:none; position:relative;">
+
+    <img id="upload-preview-img"
+         src=""
+         alt="Preview"
+         style="width:100%; display:block;">
+         <img id="upload-overlay-preview" class="overlay-preview"
                  src="" alt="" style="display:none;">
-        </div>
+
+    <div id="upload-stickers-layer"></div>
+
+</div>
 
         <!-- Overlays -->
         <h3>Select an Overlay</h3>
