@@ -465,8 +465,17 @@
 
                 var formData = new FormData();
                 formData.append('image_data', imageData);
-                formData.append('overlay','');
-                formData.append('csrf_token', csrfInput.value);
+
+                formData.append(
+                    'stickers',
+                    JSON.stringify(stickers)
+                );
+                
+
+                formData.append(
+                    'csrf_token',
+                    csrfInput.value
+                );
 
                 fetch('/capture', { method: 'POST', body: formData })
                     .then(function (res) { return res.json(); })
@@ -488,12 +497,33 @@
         }
 
         if (uploadForm) {
+
             uploadForm.addEventListener('submit', function (e) {
+
                 if (!fileInput || !fileInput.files || !fileInput.files[0]) {
                     e.preventDefault();
                     alert('Choose an image file.');
+                    return;
                 }
+
+                var input = document.getElementById("stickers-input");
+
+                if (!input) {
+
+                    input = document.createElement("input");
+
+                    input.type = "hidden";
+                    input.name = "stickers";
+                    input.id = "stickers-input";
+
+                    uploadForm.appendChild(input);
+                }
+
+                input.value = JSON.stringify(stickers);
+                
+
             });
+
         }
 
         document.addEventListener("mousemove", function (e) {
