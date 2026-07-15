@@ -52,27 +52,16 @@ class EditorController {
             }
 
             $imageData = $_POST['image_data'] ?? '';
-            $overlay = trim($_POST['overlay'] ?? '');
+            // $overlay = trim($_POST['overlay'] ?? '');
+            $stickers = json_decode($_POST['stickers'] ?? '[]', true);
+
+            if (!is_array($stickers)) {
+                $stickers = [];
+            }
 
             if (empty($imageData)) {
                 echo json_encode(['error' => 'No image data received']);
                 return;
-            }
-
-            // if (empty($overlay)) {
-            //     echo json_encode(['error' => 'No overlay selected']);
-            //     return;
-            // }
-
-            // Validate overlay exists
-          if (!empty($overlay)) {
-                $overlayPath = __DIR__ . '/../../public/overlays/' . basename($overlay);
-                if (!file_exists($overlayPath)) {
-                    echo json_encode(['error' => 'Invalid overlay selected']);
-                    return;
-                }
-            } else {
-                $overlayPath = null; // No overlay
             }
 
             // Check uploads directory
@@ -105,75 +94,79 @@ class EditorController {
                 echo json_encode(['error' => 'Could not create image from data']);
                 return;
             }
+            // Merge every sticker
+            foreach ($stickers as $sticker) {
 
-            // Merge overlay only if selected
-if (!empty($overlay)) {
+                $overlayPath = __DIR__ . '/../../public/overlays/' .
+                    basename($sticker['file']);
 
-    $overlayImage = @imagecreatefrompng($overlayPath);
+                if (!file_exists($overlayPath)) {
+                    continue;
+                }
 
-    if ($overlayImage === false) {
-        imagedestroy($webcamImage);
-        echo json_encode(['error' => 'Could not load overlay PNG']);
-        return;
-    }
+                $overlayImage = @imagecreatefrompng($overlayPath);
 
-    $ww = imagesx($webcamImage);
-    $wh = imagesy($webcamImage);
-    $ow = imagesx($overlayImage);
-    $oh = imagesy($overlayImage);
+                if (!$overlayImage) {
+                    continue;
+                }
 
-    $resizedOverlay = imagecreatetruecolor($ww, $wh);
+                $width  = intval($sticker['width']);
+                $height = intval($sticker['height']);
 
-    imagealphablending($resizedOverlay, false);
-    imagesavealpha($resizedOverlay, true);
+                $x = intval($sticker['x']);
+                $y = intval($sticker['y']);
 
-    $transparent = imagecolorallocatealpha(
-        $resizedOverlay,
-        0,
-        0,
-        0,
-        127
-    );
+                $resizedOverlay = imagecreatetruecolor($width, $height);
 
-    imagefilledrectangle(
-        $resizedOverlay,
-        0,
-        0,
-        $ww,
-        $wh,
-        $transparent
-    );
+                imagealphablending($resizedOverlay, false);
+                imagesavealpha($resizedOverlay, true);
 
-    imagecopyresampled(
-        $resizedOverlay,
-        $overlayImage,
-        0,
-        0,
-        0,
-        0,
-        $ww,
-        $wh,
-        $ow,
-        $oh
-    );
+                $transparent = imagecolorallocatealpha(
+                    $resizedOverlay,
+                    0,
+                    0,
+                    0,
+                    127
+                );
 
-    imagealphablending($webcamImage, true);
-    imagesavealpha($webcamImage, true);
+                imagefilledrectangle(
+                    $resizedOverlay,
+                    0,
+                    0,
+                    $width,
+                    $height,
+                    $transparent
+                );
 
-    imagecopy(
-        $webcamImage,
-        $resizedOverlay,
-        0,
-        0,
-        0,
-        0,
-        $ww,
-        $wh
-    );
+                imagecopyresampled(
+                    $resizedOverlay,
+                    $overlayImage,
+                    0,
+                    0,
+                    0,
+                    0,
+                    $width,
+                    $height,
+                    imagesx($overlayImage),
+                    imagesy($overlayImage)
+                );
 
-    imagedestroy($overlayImage);
-    imagedestroy($resizedOverlay);
-}
+                imagealphablending($webcamImage, true);
+
+                imagecopy(
+                    $webcamImage,
+                    $resizedOverlay,
+                    $x,
+                    $y,
+                    0,
+                    0,
+                    $width,
+                    $height
+                );
+
+                imagedestroy($overlayImage);
+                imagedestroy($resizedOverlay);
+            }
 
             // Save final image
             $filename = 'img_' . uniqid() . '_' . time() . '.png';
@@ -183,8 +176,6 @@ if (!empty($overlay)) {
 
             // Cleanup GD
             imagedestroy($webcamImage);
-            // imagedestroy($overlayImage);
-            // imagedestroy($resizedOverlay);
 
             if (!$saved) {
                 echo json_encode(['error' => 'Failed to save image file']);
@@ -228,23 +219,10 @@ if (!empty($overlay)) {
             exit;
         }
 
-        $overlay = trim($_POST['overlay'] ?? '');
+        $stickers = json_decode($_POST['stickers'] ?? '[]', true);
 
-        // if (empty($overlay)) {
-        //     Session::setFlash('error', 'Please select an overlay.');
-        //     header('Location: /editor');
-        //     exit;
-        // }
-
-       if (!empty($overlay)) {
-            $overlayPath = __DIR__ . '/../../public/overlays/' . basename($overlay);
-            if (!file_exists($overlayPath)) {
-                Session::setFlash('error', 'Invalid overlay selected.');
-                header('Location: /editor');
-                exit;
-            }
-        } else {
-            $overlayPath = null; // No overlay
+        if (!is_array($stickers)) {
+            $stickers = [];
         }
 
         // Check file upload
@@ -310,75 +288,79 @@ if (!empty($overlay)) {
             exit;
         }
 
-        // Merge overlay only if one was selected
-if (!empty($overlay)) {
+        // Merge every sticker
+        foreach ($stickers as $sticker) {
 
-    $overlayImage = @imagecreatefrompng($overlayPath);
+            $overlayPath = __DIR__ . '/../../public/overlays/' .
+                basename($sticker['file']);
 
-    if (!$overlayImage) {
-        imagedestroy($uploadedImage);
-        Session::setFlash('error', 'Could not load overlay.');
-        header('Location: /editor');
-        exit;
-    }
+            if (!file_exists($overlayPath)) {
+                continue;
+            }
 
-    $iw = imagesx($uploadedImage);
-    $ih = imagesy($uploadedImage);
-    $ow = imagesx($overlayImage);
-    $oh = imagesy($overlayImage);
+            $overlayImage = @imagecreatefrompng($overlayPath);
 
-    $resizedOverlay = imagecreatetruecolor($iw, $ih);
+            if (!$overlayImage) {
+                continue;
+            }
 
-    imagealphablending($resizedOverlay, false);
-    imagesavealpha($resizedOverlay, true);
+            $width  = intval($sticker['width']);
+            $height = intval($sticker['height']);
 
-    $transparent = imagecolorallocatealpha(
-        $resizedOverlay,
-        0,
-        0,
-        0,
-        127
-    );
+            $x = intval($sticker['x']);
+            $y = intval($sticker['y']);
 
-    imagefilledrectangle(
-        $resizedOverlay,
-        0,
-        0,
-        $iw,
-        $ih,
-        $transparent
-    );
+            $resizedOverlay = imagecreatetruecolor($width, $height);
 
-    imagecopyresampled(
-        $resizedOverlay,
-        $overlayImage,
-        0,
-        0,
-        0,
-        0,
-        $iw,
-        $ih,
-        $ow,
-        $oh
-    );
+            imagealphablending($resizedOverlay, false);
+            imagesavealpha($resizedOverlay, true);
 
-    imagealphablending($uploadedImage, true);
-    imagesavealpha($uploadedImage, true);
+            $transparent = imagecolorallocatealpha(
+                $resizedOverlay,
+                0,
+                0,
+                0,
+                127
+            );
 
-    imagecopy(
-        $uploadedImage,
-        $resizedOverlay,
-        0,
-        0,
-        0,
-        0,
-        $iw,
-        $ih
-    );
+            imagefilledrectangle(
+                $resizedOverlay,
+                0,
+                0,
+                $width,
+                $height,
+                $transparent
+            );
 
-    imagedestroy($overlayImage);
-    imagedestroy($resizedOverlay);
-}
+            imagecopyresampled(
+                $resizedOverlay,
+                $overlayImage,
+                0,
+                0,
+                0,
+                0,
+                $width,
+                $height,
+                imagesx($overlayImage),
+                imagesy($overlayImage)
+            );
+
+            imagealphablending($uploadedImage, true);
+
+            imagecopy(
+                $uploadedImage,
+                $resizedOverlay,
+                $x,
+                $y,
+                0,
+                0,
+                $width,
+                $height
+            );
+
+            imagedestroy($overlayImage);
+            imagedestroy($resizedOverlay);
+        }
         // Save
         $uploadsDir = __DIR__ . '/../../public/uploads/';
         if (!is_dir($uploadsDir)) {
