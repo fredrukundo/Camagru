@@ -17,12 +17,12 @@ class AuthController {
     }
 
     public function login() {
-        if (!Csrf::validateToken($_POST['csrf_token'] ?? '')) {
+        if (!Csrf::validateToken($_POST['csrf_token'] ?? '')) { // Validate CSRF token
             Session::setFlash('error', 'Invalid CSRF token.');
             header('Location: /login');
             exit;
         }
-
+        // Validate input
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
 
@@ -31,11 +31,11 @@ class AuthController {
             header('Location: /login');
             exit;
         }
-
+        // Check credentials
         $userModel = new User();
         $user = $userModel->findByUsername($username);
 
-        if (!$user || !password_verify($password, $user['password'])) {
+        if (!$user || !password_verify($password, $user['password'])) { //
             Session::setFlash('error', 'Invalid username or password.');
             header('Location: /login');
             exit;
@@ -58,6 +58,7 @@ class AuthController {
     }
 
     public function showRegister() {
+        // Render the registration view
         $pageTitle = 'Register';
         require __DIR__ . '/../views/layout/header.php';
         require __DIR__ . '/../views/auth/register.php';
@@ -65,12 +66,13 @@ class AuthController {
     }
 
     public function register() {
+        // Validate CSRF token
         if (!Csrf::validateToken($_POST['csrf_token'] ?? '')) {
             Session::setFlash('error', 'Invalid CSRF token.');
             header('Location: /register');
             exit;
         }
-
+        // Validate input
         $username = trim($_POST['username'] ?? '');
         $email    = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
@@ -122,6 +124,7 @@ class AuthController {
     }
 
     public function verify() {
+        // Handle email verification
         $token = $_GET['token'] ?? '';
 
         if (empty($token)) {
@@ -150,6 +153,7 @@ class AuthController {
     }
 
     public function showForgotPassword() {
+        // Render the forgot password view
         $pageTitle = 'Forgot Password';
         require __DIR__ . '/../views/layout/header.php';
         require __DIR__ . '/../views/auth/forgot_password.php';
@@ -191,6 +195,7 @@ class AuthController {
     }
 
     public function showResetPassword() {
+        // Render the reset password view
         $token = $_GET['token'] ?? '';
         if (empty($token)) {
             header('Location: /login');
