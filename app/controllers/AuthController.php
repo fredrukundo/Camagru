@@ -1,12 +1,15 @@
 <?php
 
 /*
-        User system => Registration , verification , login
+    AuthController.php
+    Handles user authentication, registration, email verification,
+    password reset, and session management.
 */
 
 class AuthController {
 
     public function showLogin() {
+        // Render the login view
         $pageTitle = 'Login';
         require __DIR__ . '/../views/layout/header.php';
         require __DIR__ . '/../views/auth/login.php';
