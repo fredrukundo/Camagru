@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * UserController.php
+ *
+ * Handles user settings and profile updates.
+ */
 class UserController {
 
     public function showSettings() {
