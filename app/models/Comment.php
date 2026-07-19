@@ -1,5 +1,10 @@
 <?php
 
+/*
+    Comment Model
+    Handles comment creation and retrieval for images.
+*/
+
 class Comment {
     private $db;
 
