@@ -8,14 +8,16 @@
 class UserController {
 
     public function showSettings() {
+        // Ensure the user is logged in
         if (!Session::isLoggedIn()) {
             header('Location: /login');
             exit;
         }
-
+        // Fetch the current user's data
         $userModel = new User();
         $user = $userModel->findById(Session::getUserId());
 
+        // Render the settings view with the user's data
         $pageTitle = 'Settings';
         require __DIR__ . '/../views/layout/header.php';
         require __DIR__ . '/../views/user/settings.php';
