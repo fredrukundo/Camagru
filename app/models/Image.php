@@ -1,7 +1,8 @@
 <?php
 
-/* 
-        Image CRUD => How Images are stored/retrieved
+/*
+    Image Model
+    Handles image uploads, retrieval, deletion, and pagination.
 */
 
 class ImageModel {
