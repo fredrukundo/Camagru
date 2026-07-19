@@ -9,6 +9,7 @@ class ImageModel {
     private $db;
 
     public function __construct() {
+        // Initialize database connection
         $this->db = Database::getInstance()->getConnection();
     }
 
