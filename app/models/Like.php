@@ -1,9 +1,15 @@
 <?php
 
+/*
+    Like Model
+    Handles like toggling and retrieval for images.
+*/
+
 class Like {
     private $db;
 
     public function __construct() {
+        // Initialize database connection
         $this->db = Database::getInstance()->getConnection();
     }
 
