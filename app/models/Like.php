@@ -14,7 +14,7 @@ class Like {
     }
 
     public function toggle($imageId, $userId) {
-        // Check if like exists
+        // toggle like status for a specific image by a user
         $stmt = $this->db->prepare("SELECT id FROM likes WHERE image_id = ? AND user_id = ?");
         $stmt->execute([$imageId, $userId]);
 
@@ -32,12 +32,14 @@ class Like {
     }
 
     public function getCount($imageId) {
+        // get the total number of likes for a specific image
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM likes WHERE image_id = ?");
         $stmt->execute([$imageId]);
         return $stmt->fetchColumn();
     }
 
     public function hasLiked($imageId, $userId) {
+        // check if a specific user has liked a specific image
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM likes WHERE image_id = ? AND user_id = ?");
         $stmt->execute([$imageId, $userId]);
         return $stmt->fetchColumn() > 0;
