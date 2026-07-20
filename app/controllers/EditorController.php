@@ -217,6 +217,7 @@ class EditorController {
     }
 
     public function upload() {
+        // Always return JSON
         if (!Session::isLoggedIn()) {
             Session::setFlash('error', 'Not authenticated.');
             header('Location: /login');
@@ -228,7 +229,7 @@ class EditorController {
             header('Location: /editor');
             exit;
         }
-
+        
         $stickers = json_decode($_POST['stickers'] ?? '[]', true);
 
         if (!is_array($stickers)) {
