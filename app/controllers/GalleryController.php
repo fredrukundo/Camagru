@@ -41,15 +41,17 @@ class GalleryController {
     public function addComment() {
         // ALWAYS return JSON
         header('Content-Type: application/json');
-
+        // Handle comment submission via AJAX
         try {
             if (!Session::isLoggedIn()) {
+                // User must be logged in to comment
                 http_response_code(401);
                 echo json_encode(['error' => 'Not authenticated']);
                 return;
             }
 
             if (!Csrf::validateToken($_POST['csrf_token'] ?? '')) {
+                // Invalid CSRF token
                 http_response_code(403);
                 echo json_encode(['error' => 'Invalid CSRF token']);
                 return;
@@ -59,11 +61,13 @@ class GalleryController {
             $content = trim($_POST['content'] ?? '');
 
             if ($imageId <= 0) {
+                // Invalid image ID
                 echo json_encode(['error' => 'Invalid image']);
                 return;
             }
 
             if (empty($content)) {
+                // Comment content cannot be empty
                 echo json_encode(['error' => 'Comment cannot be empty']);
                 return;
             }
@@ -87,6 +91,7 @@ class GalleryController {
             $image = $imageModel->findById($imageId);
 
             if ($image) {
+                // Notify the author if they have notifications enabled and it's not their own comment
                 $userModel = new User();
                 $author = $userModel->findById($image['user_id']);
 
@@ -127,16 +132,20 @@ class GalleryController {
     }
 
     public function toggleLike() {
+        // ALWAYS return JSON
         header('Content-Type: application/json');
 
         try {
+            // Handle like/unlike via AJAX
             if (!Session::isLoggedIn()) {
+                // User must be logged in to like/unlike
                 http_response_code(401);
                 echo json_encode(['error' => 'Not authenticated']);
                 return;
             }
 
             if (!Csrf::validateToken($_POST['csrf_token'] ?? '')) {
+                // Invalid CSRF token
                 http_response_code(403);
                 echo json_encode(['error' => 'Invalid CSRF token']);
                 return;
@@ -148,7 +157,7 @@ class GalleryController {
                 echo json_encode(['error' => 'Invalid image']);
                 return;
             }
-
+            // Toggle like
             $likeModel = new Like();
             $liked = $likeModel->toggle($imageId, Session::getUserId());
             $count = $likeModel->getCount($imageId);
@@ -228,9 +237,11 @@ class GalleryController {
     }
 
     public function getNewPosts() {
+        // Always return JSON
         header('Content-Type: application/json');
 
         try {
+            // Get the last image ID from the query string
             $afterId = max(0, intval($_GET['after'] ?? 0));
 
             $db = Database::getInstance()->getConnection();
