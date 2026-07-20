@@ -1,8 +1,11 @@
 <?php
 
-/*
-     Main Feature: Webcom capture + server-side merge
-*/
+/**
+ * EditorController.php
+ *
+ * Handles the image editor functionality, including capturing images from the webcam,
+ * uploading images, applying overlays/stickers, and saving images to the database.
+ */
 
 class EditorController {
 
