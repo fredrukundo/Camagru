@@ -229,7 +229,7 @@ class EditorController {
             header('Location: /editor');
             exit;
         }
-        
+
         $stickers = json_decode($_POST['stickers'] ?? '[]', true);
 
         if (!is_array($stickers)) {
@@ -401,6 +401,7 @@ class EditorController {
     }
 
     public function deleteImage() {
+        // Always return JSON
         if (!Session::isLoggedIn()) {
             header('Location: /login');
             exit;
@@ -411,14 +412,21 @@ class EditorController {
             header('Location: /editor');
             exit;
         }
-
+        // Validate image ID
         $imageId = intval($_POST['image_id'] ?? 0);
-
+        // Ensure the image belongs to the logged-in user
         $imageModel = new ImageModel();
         if ($imageModel->delete($imageId, Session::getUserId())) {
             Session::setFlash('success', 'Image deleted.');
         } else {
             Session::setFlash('error', 'Could not delete image.');
+        }
+
+        // Return JSON response for AJAX requests
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'success', 'message' => 'Image deleted.']);
+            exit;
         }
 
         header('Location: /editor');
