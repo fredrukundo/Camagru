@@ -10,19 +10,22 @@
 class EditorController {
 
     public function index() {
+        // Ensure the user is logged in
         if (!Session::isLoggedIn()) {
             Session::setFlash('error', 'Please log in to access the editor.');
             header('Location: /login');
             exit;
         }
-
+        // Fetch user's previously created images
         $imageModel = new ImageModel();
         $userImages = $imageModel->getByUser(Session::getUserId());
 
         // Get overlays from public/overlays/
         $overlayDir = __DIR__ . '/../../public/overlays/';
+        
         $overlays = [];
         if (is_dir($overlayDir)) {
+            // Scan for PNG files in the overlays directory
             $files = scandir($overlayDir);
             foreach ($files as $file) {
                 if (preg_match('/\.png$/i', $file)) {
