@@ -1,14 +1,17 @@
 <?php
 
 
-/*
-        Public Gallery => Pagination , likes, comments
-*/
+/**
+ * GalleryController.php
+ *
+ * Handles gallery display, comments, likes, and real-time updates.
+ */
 
 
 class GalleryController {
 
     public function index() {
+        // Pagination parameters
         $page    = max(1, intval($_GET['page'] ?? 1));
         $perPage = 5;
 
