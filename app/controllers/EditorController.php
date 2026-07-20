@@ -45,23 +45,26 @@ class EditorController {
         header('Content-Type: application/json');
 
         try {
+            // Handle webcam capture via AJAX
             if (!Session::isLoggedIn()) {
+                // User must be logged in to capture images
                 http_response_code(401);
                 echo json_encode(['error' => 'Not authenticated']);
                 return;
             }
 
             if (!Csrf::validateToken($_POST['csrf_token'] ?? '')) {
+                // Invalid CSRF token
                 http_response_code(403);
                 echo json_encode(['error' => 'Invalid CSRF token']);
                 return;
             }
-
+            // Validate and process the base64 image data
             $imageData = $_POST['image_data'] ?? '';
-            // $overlay = trim($_POST['overlay'] ?? '');
             $stickers = json_decode($_POST['stickers'] ?? '[]', true);
 
             if (!is_array($stickers)) {
+                // If stickers is not an array, reset to empty
                 $stickers = [];
             }
 
@@ -80,12 +83,12 @@ class EditorController {
                 return;
             }
 
-            // Decode base64 image
-            // Handle both "data:image/png;base64,xxxx" and raw base64
+            // Remove the data URI prefix if present
             if (strpos($imageData, ',') !== false) {
                 $parts = explode(',', $imageData, 2);
                 $imageData = $parts[1];
             }
+            // Replace spaces with plus signs for proper base64 decoding
             $imageData = str_replace(' ', '+', $imageData);
             $decodedImage = base64_decode($imageData, true);
 
@@ -94,7 +97,7 @@ class EditorController {
                 return;
             }
 
-            // Create GD image from webcam data
+            // Create a GD image from the decoded data
             $webcamImage = @imagecreatefromstring($decodedImage);
             if ($webcamImage === false) {
                 echo json_encode(['error' => 'Could not create image from data']);
@@ -102,6 +105,7 @@ class EditorController {
             }
             // Merge every sticker
             foreach ($stickers as $sticker) {
+            
 
                 $overlayPath = __DIR__ . '/../../public/overlays/' .
                     basename($sticker['file']);
@@ -109,24 +113,24 @@ class EditorController {
                 if (!file_exists($overlayPath)) {
                     continue;
                 }
-
+                // Create a GD image from the overlay
                 $overlayImage = @imagecreatefrompng($overlayPath);
 
                 if (!$overlayImage) {
                     continue;
                 }
-
+                // Get sticker dimensions and position
                 $width  = intval($sticker['width']);
                 $height = intval($sticker['height']);
 
                 $x = intval($sticker['x']);
                 $y = intval($sticker['y']);
-
+                // Create a true color image for the resized overlay
                 $resizedOverlay = imagecreatetruecolor($width, $height);
 
                 imagealphablending($resizedOverlay, false);
                 imagesavealpha($resizedOverlay, true);
-
+                
                 $transparent = imagecolorallocatealpha(
                     $resizedOverlay,
                     0,
