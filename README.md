@@ -15,15 +15,16 @@ MAIL_PORT=1025
 MAIL_FROM=noreply@camagru.local  
 
 APP_URL=http://localhost:8080  
-APP_SECRET=a_random_long_secret_key_here  
+APP_SECRET=a_random_long_secret_key_here
+```
 
 
 
-Architecture
+# Architecture
 Custom MVC, no framework: public/index.php bootstraps everything → core/Router.php dispatches → app/controllers/* handle logic → app/models/* talk to MySQL via PDO → app/views/* render HTML. Deployed via Docker (nginx + php-fpm + mariadb + mailhog).
 
-File-by-file
-Entry & routing
+## File-by-file
+### Entry & routing
 
 public/index.php — front controller. Loads .env, requires all core classes and models, registers every route, dispatches the request. This is the map of the whole app — read it first.
 core/Router.php — tiny router: stores GET/POST routes in an array, matches on exact path, instantiates Controller@method strings.
