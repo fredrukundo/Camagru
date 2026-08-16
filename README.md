@@ -18,7 +18,21 @@ APP_URL=http://localhost:8080
 APP_SECRET=a_random_long_secret_key_here
 ```
 
+## Useful commands
 
+Access the MariaDB database directly inside the `db` container:
+
+```bash
+docker compose exec db bash
+mariadb -u root -p
+
+SHOW DATABASES;
+USE camagru;
+SHOW TABLES;
+DESCRIBE users;
+SELECT * FROM users;
+DELETE FROM users;
+```
 
 ## Architecture
 
