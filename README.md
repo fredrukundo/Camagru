@@ -1,5 +1,57 @@
 # Camagru
 
+Instagram-like photo booth built for the 42 School "Camagru" subject: capture a photo from your webcam (or upload one), composite it with server-side sticker overlays, and share it in a public gallery with likes and comments. Custom PHP MVC, no framework, fully dockerized.
+
+## Getting started
+
+### Requirements
+
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+- That's it — PHP, nginx, MariaDB, and a mail server all run inside containers.
+
+### 1. Clone the repo
+
+```bash
+git clone <this-repo-url>
+cd Camagru
+```
+
+### 2. Create your `.env` file
+
+Copy the template below into a `.env` file at the project root (see [env file](#env-file) for the required variables), then adjust the passwords/secrets as you like.
+
+### 3. Build and start the containers
+
+```bash
+docker compose up -d --build
+```
+
+This starts four services:
+
+| Service | URL | Purpose |
+|---|---|---|
+| `nginx` | http://localhost:8080 | web app entry point |
+| `php` | — | PHP-FPM, runs the app |
+| `db` | localhost:3306 | MariaDB, schema auto-created from `config/init.sql` on first boot |
+| `mailhog` | http://localhost:8025 | fake SMTP inbox — verification/reset emails land here in dev |
+
+### 4. Open the app
+
+Visit **http://localhost:8080**, register an account, then check **http://localhost:8025** for the verification email (no real email is sent in dev — msmtp routes everything to mailhog).
+
+### 5. Stop the app
+
+```bash
+docker compose down          # stop containers, keep DB data
+docker compose down -v       # stop containers and wipe DB data
+```
+
+### Troubleshooting
+
+- **DB schema missing/out of date**: the schema is only loaded on the *first* creation of the `db_data` volume. If you change `config/init.sql` after that, run `docker compose down -v` to reset, or apply changes manually via `docker compose exec db mariadb -u root -p`.
+- **Port already in use**: something else on your machine is using 8080, 3306, 8025, or 1025 — stop it or change the port mapping in `docker-compose.yml`.
+- **Webcam capture doesn't work**: browsers only allow `getUserMedia` on `localhost` or HTTPS, so use `http://localhost:8080`, not your machine's LAN IP.
+
 ## env file
 
 ```bash
